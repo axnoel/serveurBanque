@@ -10,7 +10,7 @@ __prg_name__ = "serveurBanque"
 
 toBoolean = {'true': True, 'false': False}
 
-SERVEUR_PORT = 5000
+SERVEUR_PORT = int(os.environ.get('PORT', '5000'))
 SERVEUR_DEBUG = True
 SERVEUR_HOST = '0.0.0.0'
 
