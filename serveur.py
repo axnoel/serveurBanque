@@ -22,10 +22,6 @@ app.config["APP_DEBUG"] = SERVEUR_DEBUG
 app.config['APP_NAME'] = 'Serveur banque'
 app.config['APP_DESC'] = 'IHM management parameters'
 
-# db SQLAlchemy
-SERVEUR_DIR = os.environ.get('SERVEUR_DIR', os.path.dirname(os.path.abspath(__file__)))
-
-
 
 # register AccessDB
 app.register_blueprint(AccessDB(url_prefix="/"))
