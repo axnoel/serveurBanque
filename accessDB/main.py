@@ -55,7 +55,7 @@ def addAccount():
 def getAllClients():
     try:
         conn, cur = connect()
-        cur.execute("Select civilite + ' ' + prenomcli + ' ' + nomcli, numcli from arkea.\"Client\";")
+        cur.execute("Select concat(civilite, ' ', prenomcli, ' ', nomcli), numcli from arkea.\"Client\";")
         result = cur.fetchone()
         close(conn, cur)
     except Exception as e:
