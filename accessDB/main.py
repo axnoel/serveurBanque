@@ -74,7 +74,7 @@ def getTransactionsNumcli():
         conn, cur = connect()
         num_gab = request.json.get("num_gab", '')
         cur.execute(
-            "Select * from arkea.\"Operation\" where num_gab=%s;" % num_gab)
+            "Select * from arkea.\"Operation\" where numgab=%s;" % num_gab)
         result = cur.fetchall()
         close(conn, cur)
     except Exception as e:
