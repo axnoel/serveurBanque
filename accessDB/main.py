@@ -124,8 +124,7 @@ def getStats():
             cur.execute("Select sum(montantop), count(*) from arkea.\"Operation\" where EXTRACT(YEAR FROM dateop) = '%s';" %int(ann[0]))
             res_ann = cur.fetchone()
             liste_annee.append({"Annee" : int(ann[0]), "Montant" : res_ann[0], "TotalOp" : res_ann[1]})
-        print(liste_annee)
-
+            
         close(conn, cur)
     except Exception as e:
         close(conn, cur)
