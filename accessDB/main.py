@@ -45,8 +45,8 @@ def addAccount():
         numco = int(random.random() * 5000)
         typecompte = request.json.get("typecompte", '')
         soldecompte = request.json.get("soldecompte", '')
-        cur.execute("INSERT INTO arkea.\"Compte\" (numco, numcli, typecompte, soldecompte) VALUES (%s, %s, %s, %s);" % (
-            numco, numcli, typecompte, soldecompte))
+        cur.execute("INSERT INTO arkea.\"Compte\" (numco,typecompte, soldecompte) VALUES (%s, %s, %s);" % (
+            numco, typecompte, soldecompte))
         conn.commit()
         close(conn, cur)
     except Exception as e:
