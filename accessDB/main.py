@@ -69,10 +69,10 @@ def getAllClients():
     return {"Status": "Done", "Value": result}
 
 
-def getTransactionsNumcli():
+def getTransactionsNumGab():
     try:
         conn, cur = connect()
-        num_gab = request.json.get("num_gab", '')
+        num_gab = request.json.get("numgab", '')
         cur.execute(
             "Select * from arkea.\"Operation\" where numgab=%s;" % num_gab)
         result = cur.fetchall()
