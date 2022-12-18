@@ -69,18 +69,21 @@ def getAllClients():
     return {"Status": "Done", "Value": result}
 
 
-def getTransactionsNumGab():
+def getTransactionsNumcli():
     try:
         conn, cur = connect()
-        num_gab = request.json.get("numgab", '')
+        numcli = request.json.get("numcli", '')
         cur.execute(
-            "Select * from arkea.\"Operation\" where numgab=%s;" % num_gab)
+            "Select * from arkea.\"Operation\" where numco=(Select numco from arkea.\"Compte\" where numcli='%s');" % numcli)
         result = cur.fetchall()
+        value = []
+        for res in result:
+            value.append({"numop" : res[0], "numco" : res[4], "dateop" : res[5], "montantop" : res[6]})
         close(conn, cur)
     except Exception as e:
         close(conn, cur)
         return {"Status": "Error", "Message": str(e)}
-    return {"Status": "Done", "Value": result}
+    return {"Status": "Done", "Value": value}
 
 
 def getTransactionsDate():
@@ -91,11 +94,17 @@ def getTransactionsDate():
         cur.execute(
             "Select * from arkea.\"Operation\" where dateop BETWEEN '%s' AND '%s';" % (debut, fin))
         result = cur.fetchall()
+        value = []
+        for res in result:
+            value.append({"numop" : res[0], "numco" : res[4], "dateop" : res[5], "montantop" : res[6]})
+        print("Hello")
+        print(value)
         close(conn, cur)
     except Exception as e:
+        print(str(e))
         close(conn, cur)
         return {"Status": "Error", "Message": str(e)}
-    return {"Status": "Done", "Value": result}
+    return {"Status": "Done", "Value": value}
 
 
 def getTransactionsNumcar():
@@ -105,11 +114,14 @@ def getTransactionsNumcar():
         cur.execute(
             "Select * from arkea.\"Operation\" where numcar='%s';" % numcar)
         result = cur.fetchall()
+        value = []
+        for res in result:
+            value.append({"numop" : res[0], "numco" : res[4], "dateop" : res[5], "montantop" : res[6]})
         close(conn, cur)
     except Exception as e:
         close(conn, cur)
         return {"Status": "Error", "Message": str(e)}
-    return {"Status": "Done", "Value": result}
+    return {"Status": "Done", "Value": value}
 
 
 def getStats():
