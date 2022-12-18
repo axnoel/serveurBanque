@@ -117,20 +117,37 @@ def getStats():
         conn, cur = connect()
         cur.execute("Select sum(montantop), count(*) from arkea.\"Operation\";")
         result = cur.fetchone()
-        cur.execute("Select DISTINCT EXTRACT(YEAR FROM dateop) as daate from arkea.\"Operation\" order by daate asc;")
-        annees = cur.fetchall()
         liste_annee = []
-        for ann in annees:
-            cur.execute("Select sum(montantop), count(*) from arkea.\"Operation\" where EXTRACT(YEAR FROM dateop) = '%s';" %int(ann[0]))
-            res_ann = cur.fetchone()
-            liste_annee.append({"Annee" : int(ann[0]), "Montant" : res_ann[0], "TotalOp" : res_ann[1]})
-            
+        cur.execute("Select EXTRACT(YEAR FROM dateop) ,sum(montantop), count(*) from arkea.\"Operation\" group by EXTRACT(YEAR FROM dateop) order by EXTRACT(YEAR FROM dateop) desc;")
+        for res_ann in cur.fetchall():
+            liste_annee.append(
+                {"Annee": int(res_ann[0]), "Montant": res_ann[1], "TotalOp": res_ann[2]})
+        cur.execute("Select sum(montantop), count(*), CAST(avg(montantop) as NUMERIC(7,2)), min(montantop), max(montantop) from arkea.\"Operation\" where numgab is not NULL;")
+        res = cur.fetchone()
+        op_gab = {"Montant_Total": res[0], "Nbr_Operations": res[1],
+                  "Moyenne_OP": res[2], "Min_OP": res[3], "Max_OP": res[4]}
+        cur.execute("Select o.numgab, CONCAT(g.adrgab, ', ', g.villegab, ', ', g.codep), sum(montantop), count(*), CAST(avg(montantop) as NUMERIC(7,2)), min(montantop), max(montantop) from arkea.\"Operation\" o join arkea.\"GAB\" g on o.numgab = g.numgab where o.numgab is not NULL group by o.numgab, g.adrgab,g.villegab, g.codep;")
+        op_gab_par_gab = []
+        for res in cur.fetchall():
+            op_gab_par_gab.append({"Num_Gab": res[0], "Adr_Gab": res[1], "Montant_Total": res[2],
+                                  "Nbr_Operations": res[3], "Moyenne_OP": res[4], "Min_OP": res[5], "Max_OP": res[6]})
+        cur.execute("Select sum(montantop), count(*), CAST(avg(montantop) as NUMERIC(7,2)), min(montantop), max(montantop) from arkea.\"Operation\" where numcome is not NULL;")
+        res = cur.fetchone()
+        op_com = {"Montant_Total": res[0], "Nbr_Operations": res[1],
+                  "Moyenne_OP": res[2], "Min_OP": res[3], "Max_OP": res[4]}
+
+        cur.execute("Select EXTRACT(MONTH FROM dateop), EXTRACT(YEAR FROM dateop) ,sum(montantop), CAST(avg(montantop) as NUMERIC(7,2)) from arkea.\"Operation\" group by EXTRACT(YEAR FROM dateop), EXTRACT(MONTH FROM dateop) order by EXTRACT(YEAR FROM dateop) desc, EXTRACT(MONTH FROM dateop) desc;")
+
+        liste_mois = []
+        for res in cur.fetchall():
+            liste_mois.append({"Mois": res[0], "Annee": int(
+                res[1]), "Montant_Total": res[2], "Moyenne_OP": res[3]})
         close(conn, cur)
     except Exception as e:
         close(conn, cur)
         print(e)
         return {"Status": "Error", "Message": str(e)}
-    return {"Status": "Done", "Montant": result[0], "TotalOp": result[1], "Annee" : liste_annee}
+    return {"Status": "Done", "Montant_total": result[0], "Nbr_Operations": result[1], "Annuelle": liste_annee, "OP_GAB": op_gab, "OP_GAB_Par_GAB": op_gab_par_gab, "OP_Commercants": op_com, "Mensuelle": liste_mois}
 
 
 class AccessDB(Blueprint):
