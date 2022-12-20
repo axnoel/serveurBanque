@@ -1,14 +1,21 @@
-from flask import Blueprint, current_app, flash, request, render_template, redirect, url_for
+from flask import Blueprint, request
 import random
 import psycopg2
 
 __version__ = '0.1.0'
 
+dbname = 'arkea'
+user = 'postgres'
+password = 'admin'
+host = 'bdd.harruis.fr'
+port = '5432'
+
 
 def connect():
-    conn = psycopg2.connect(dbname='arkea', user='postgres',
-                            password='admin', host='bdd.harruis.fr', port='5432')
+    conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
     cur = conn.cursor()
+    print(conn)
+    print(cur)
     return conn, cur
 
 
