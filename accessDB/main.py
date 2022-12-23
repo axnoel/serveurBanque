@@ -1,5 +1,4 @@
 from flask import Blueprint, request
-import random
 import psycopg2
 
 __version__ = '0.1.0'
@@ -14,9 +13,12 @@ port = '5432'
 def connect():
     conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
     cur = conn.cursor()
-    print(conn)
-    print(cur)
-    return conn, cur
+    try:
+        cur.execute("Select 1;")
+        return True, conn, cur
+    except Exception as e:
+        return False, "", ""
+    
 
 
 def close(conn, cur):
@@ -26,8 +28,11 @@ def close(conn, cur):
 
 def addClient():
     try:
-        conn, cur = connect()
-        numcli = request.json.get("numcli", '')
+        is_connected, conn, cur = connect()
+        if not is_connected:
+            return {"Status": "Error", "Message": "Base de donnée déconnectée"}, 400
+        cur.execute("SELECT max(numcli) from arkea.\"Client\";")
+        numcli = int(cur.fetchone()[0]) + 1
         civilite = request.json.get("civilite", '')
         nomcli = request.json.get("nomcli", '')
         prenomcli = request.json.get("prenomcli", '')
@@ -46,13 +51,16 @@ def addClient():
 
 def addAccount():
     try:
-        conn, cur = connect()
-
-        numcli = request.json.get("numcli", '')
-        numco = int(random.random() * 5000)
+        is_connected, conn, cur = connect()
+        if not is_connected:
+            return {"Status": "Error", "Message": "Base de donnée déconnectée"}, 400
+        # En théorie il faudrait créer une carte en créant le compte, mais pas le temps.
+        #numcli = request.json.get("numcli", '')
+        cur.execute("SELECT max(nomco) from arkea.\"Compte\";")
+        numco = int(cur.fetchone()[0]) + 1
         typecompte = request.json.get("typecompte", '')
         soldecompte = request.json.get("soldecompte", '')
-        cur.execute("INSERT INTO arkea.\"Compte\" (numco,typecompte, soldecompte) VALUES (%s, %s, %s);" % (
+        cur.execute("INSERT INTO arkea.\"Compte\" (numco, typecompte, soldecompte) VALUES (%s, %s, %s);" % (
             numco, typecompte, soldecompte))
         conn.commit()
         close(conn, cur)
@@ -65,7 +73,9 @@ def addAccount():
 
 def getAllClients():
     try:
-        conn, cur = connect()
+        is_connected, conn, cur = connect()
+        if not is_connected:
+            return {"Status": "Error", "Message": "Base de donnée déconnectée"}, 400
         cur.execute(
             "Select concat(civilite, ' ', prenomcli, ' ', nomcli), numcli from arkea.\"Client\";")
         result = cur.fetchall()
@@ -78,14 +88,16 @@ def getAllClients():
 
 def getTransactionsNumcli():
     try:
-        conn, cur = connect()
+        is_connected, conn, cur = connect()
+        if not is_connected:
+            return {"Status": "Error", "Message": "Base de donnée déconnectée"}, 400
         numcli = request.json.get("numcli", '')
         cur.execute(
-            "Select * from arkea.\"Operation\" where numco=(Select numco from arkea.\"Compte\" where numcli='%s');" % numcli)
+            "Select numop, numco, dateop, montantop from arkea.\"Operation\" natural join arkea.\"Possede\" natural join arkea.\"Client\" where numcli='%s';" % numcli)
         result = cur.fetchall()
         value = []
         for res in result:
-            value.append({"numop" : res[0], "numco" : res[4], "dateop" : res[5], "montantop" : res[6]})
+            value.append({"numop" : res[0], "numco" : res[1], "dateop" : res[2], "montantop" : res[3]})
         close(conn, cur)
     except Exception as e:
         close(conn, cur)
@@ -95,7 +107,9 @@ def getTransactionsNumcli():
 
 def getTransactionsDate():
     try:
-        conn, cur = connect()
+        is_connected, conn, cur = connect()
+        if not is_connected:
+            return {"Status": "Error", "Message": "Base de donnée déconnectée"}, 400
         debut = request.json.get("debut", '')
         fin = request.json.get("fin", '')
         cur.execute(
@@ -104,8 +118,6 @@ def getTransactionsDate():
         value = []
         for res in result:
             value.append({"numop" : res[0], "numco" : res[4], "dateop" : res[5], "montantop" : res[6]})
-        print("Hello")
-        print(value)
         close(conn, cur)
     except Exception as e:
         print(str(e))
@@ -116,14 +128,16 @@ def getTransactionsDate():
 
 def getTransactionsNumcar():
     try:
-        conn, cur = connect()
+        is_connected, conn, cur = connect()
+        if not is_connected:
+            return {"Status": "Error", "Message": "Base de donnée déconnectée"}, 400
         numcar = request.json.get("numcar", '')
         cur.execute(
-            "Select * from arkea.\"Operation\" where numcar='%s';" % numcar)
+            "Select numop, numco, dateop, montantop from arkea.\"Operation\" natural join arkea.\"Possede\" where numcar='%s';" % numcar)
         result = cur.fetchall()
         value = []
         for res in result:
-            value.append({"numop" : res[0], "numco" : res[4], "dateop" : res[5], "montantop" : res[6]})
+            value.append({"numop" : res[0], "numco" : res[1], "dateop" : res[2], "montantop" : res[3]})
         close(conn, cur)
     except Exception as e:
         close(conn, cur)
@@ -133,7 +147,9 @@ def getTransactionsNumcar():
 
 def getStats():
     try:
-        conn, cur = connect()
+        is_connected, conn, cur = connect()
+        if not is_connected:
+            return {"Status": "Error", "Message": "Base de donnée déconnectée"}, 400
         cur.execute("Select sum(montantop), count(*) from arkea.\"Operation\";")
         result = cur.fetchone()
         liste_annee = []
